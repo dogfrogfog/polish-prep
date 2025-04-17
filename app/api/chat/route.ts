@@ -12,7 +12,8 @@ export async function POST(req: Request) {
   console.log(context);
 
   const result = await streamObject({
-    model: openai('gpt-4-turbo'),
+    // @ts-ignore
+    model: openai('gpt-4o-mini'),
     schema: MonologueSchema,
     prompt:
       `
@@ -35,6 +36,8 @@ you must **create a personalized monologue** that:
 - Sounds natural and exam-appropriate.
 - **Important:** The student's native language is Russian.  
   Whenever possible, prefer Polish words that are similar to Russian equivalents (e.g., "egzamin" – "экзамен") to make it easier for the student to understand and memorize the vocabulary.
+- **Format:** Return the monologue in string HTML format, with each paragraph wrapped in <p> tags.
+- Include a minimum of 3 paragraphs in the monologue.
 
 After generating the monologue, you must also:
 - Clearly state the **final word count**.

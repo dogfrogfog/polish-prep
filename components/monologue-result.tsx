@@ -42,7 +42,7 @@ export function MonologueResult({ result, level, topic, onBack }: MonologueResul
       <div className="space-y-8 w-full">
         <div className="bg-green-50 p-6 rounded-lg relative">
           {result.monologue ? (
-            <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed" dangerouslySetInnerHTML={{ __html: result.monologue }}></pre>
+            <pre className="whitespace-pre-wrap font-sans text-xl leading-relaxed space-y-4" dangerouslySetInnerHTML={{ __html: result.monologue }}></pre>
           ) : (
             <div className="flex items-center justify-center h-full">
               <span className="animate-pulse w-4 h-4 inline-block rounded-sm bg-gray-300"></span>
@@ -62,9 +62,7 @@ export function MonologueResult({ result, level, topic, onBack }: MonologueResul
         <div className="grid md:grid-cols-2 gap-10">
           <div>
             <h3 className="text-xl font-medium mb-3">Text Stats</h3>
-            <p className="text-lg">Word count: 
-              {typeof result.wordCount === 'number' ? result.wordCount : <span className="animate-pulse w-4 h-4 inline-block rounded-sm bg-gray-300"></span>}
-            </p>
+            <p className="text-lg">Word count: {result.monologue?.split(' ').length}</p>
           </div>
 
           <div>
@@ -83,7 +81,7 @@ export function MonologueResult({ result, level, topic, onBack }: MonologueResul
       <Dialog open={fullScreenOpen} onOpenChange={setFullScreenOpen}>
         <DialogContent className="max-w-5xl h-[90vh] p-0">
           <div className="overflow-y-auto h-full p-8 bg-green-50">
-            <pre className="whitespace-pre-wrap font-sans text-2xl leading-relaxed">{result.monologue}</pre>
+            <pre className="whitespace-pre-wrap font-sans text-2xl leading-relaxed space-y-4" dangerouslySetInnerHTML={{ __html: result.monologue }}></pre>
           </div>
         </DialogContent>
       </Dialog>
