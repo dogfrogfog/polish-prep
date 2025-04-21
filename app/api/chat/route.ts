@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   console.log(context);
 
   const result = await streamObject({
-    model: openai('gpt-4o-turbo'),
+    model: openai('gpt-4.1-mini-2025-04-14'),
     schema: MonologueSchema,
     prompt:
       `
