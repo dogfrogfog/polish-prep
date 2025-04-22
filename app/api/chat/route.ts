@@ -1,15 +1,19 @@
 import { openai } from '@ai-sdk/openai';
 import { streamObject } from 'ai';
 import { MonologueSchema } from '@/lib/schemas';
+import { createTask } from '@/lib/db/queries';
+import { currentUser } from '@clerk/nextjs/server';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const context = await req.json();
+  const user = await currentUser();
 
-  console.log('context');
-  console.log(context);
+  if(!user) return new Response('Unauthorized', { status: 401 });
+
+  const context = await req.json();
+  let generatedText = '';
 
   const result = await streamObject({
     model: openai('gpt-4.1-mini-2025-04-14'),
@@ -23,20 +27,20 @@ export async function POST(req: Request) {
 
 When given:
 - **Topic:** ${context.topic}
-- **User’s opinion/argument:** ${context.userPrompt}
+- **User's opinion/argument:** ${context.userPrompt}
 - **Language level:** ${context.level} (A2 / B1 / B2 / C1)
 
 Generate:
 1. A **personalized monologue** that:
    - Directly addresses the **topic**.
-   - Reflects the **user’s opinion**.
+   - Reflects the **user's opinion**.
    - Uses **vocabulary, structures, connectors** and **style** appropriate to ${context.level}.
    - Conforms to the **expected word count**:
      - **A2:** 80–100 words  
      - **B1:** 120–150 words  
      - **B2:** 180–220 words  
      - **C1:** 250+ words  
-   - Prefers **Polish–Russian cognates** where available (e.g., “egzamin” – “экзамен”).
+   - Prefers **Polish–Russian cognates** where available (e.g., "egzamin" – "экзамен").
    - Feels **natural** and **exam‑appropriate**.
 2. **Structure & Formatting**
    - At least **3 paragraphs**.
@@ -47,7 +51,7 @@ Generate:
 
 ---
 
-### Example (B1, topic: “Pies to najlepszy przyjaciel człowieka – czy zgadza się Pan/Pani z tym twierdzeniem? Proszę uzasadnić swoją odpowiedź”)
+### Example (B1, topic: "Pies to najlepszy przyjaciel człowieka – czy zgadza się Pan/Pani z tym twierdzeniem? Proszę uzasadnić swoją odpowiedź")
 
 <p>Moim zdaniem pies rzeczywiście może być najlepszym przyjacielem człowieka. Psy są bardzo wierne, lojalne i potrafią wyczuć emocje właściciela. Kiedy ktoś czuje się smutny, pies może dawać wsparcie po prostu będąc obok.</p>
 
@@ -55,6 +59,19 @@ Generate:
 
 <p>Oczywiście nie każdy musi lubić psy, ale moim zdaniem ich obecność naprawdę pozytywnie wpływa na życie człowieka.</p>
 `,
+    onFinish: async (completion) => {
+      if (completion.object) {
+        // Save to database after stream is complete
+        await createTask({
+          type: 'monologue',
+          topic: context.topic,
+          userInput: context.userPrompt,
+          languageLevel: context.level,
+          generatedTextHtml: completion.object.monologue,
+          userId: user.id,
+        });
+      }
+    }
   });
 
   return result.toTextStreamResponse();
